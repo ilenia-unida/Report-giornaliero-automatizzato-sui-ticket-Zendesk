@@ -1,0 +1,326 @@
+{
+  "name": "Flusso 10",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 23,
+              "triggerAtMinute": 59
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1168,
+        256
+      ],
+      "id": "278e0394-5a8c-4a52-a448-6ed79e2ecc2b",
+      "name": "Schedule Trigger2"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.zendesk",
+      "typeVersion": 1,
+      "position": [
+        -752,
+        256
+      ],
+      "id": "8e43a8b6-a912-430d-8fa1-5f66570681a9",
+      "name": "Get many tickets2",
+      "credentials": {
+        "zendeskApi": {
+          "id": "rn0FxV25O2m7BPW4",
+          "name": "Zendesk account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Hai in input un array JSON di ticket Zendesk. Ogni ticket contiene campi come: id, subject, description, tags, custom_fields, status, ecc.\n\nGenera un report giornaliero sintetico in JSON puro **seguendo esattamente questa struttura**:\n\n{\n  \"data\": \"YYYY-MM-DD\",               // string, data di riferimento (prendi la più recente tra i ticket)\n  \"numero_totale_ticket\": 0,          // number, totale dei ticket ricevuti\n  \"categorie_principali\": [],         // array di string, categorie più frequenti dai tag (max 5)\n  \"sintesi_generale\": \"\",             // string, breve sintesi dei ticket\n  \"criticita_emerse\": \"\",             // string, problemi o punti critici rilevati\n  \"punti_positivi\": \"\",               // string, feedback positivi o lead promettenti\n  \"suggerimenti_operativi\": \"\"        // string, azioni consigliate dal flusso\n}\n\nISTRUZIONI:\n\n1. Calcola il numero totale dei ticket.\n2. Trova le categorie principali dai tag dei ticket (max 5). Se non ci sono tag, restituisci un array vuoto [].\n3. Sintetizza brevemente il contenuto dei ticket; se non ci sono ticket, scrivi \"\".\n4. Evidenzia criticità: problemi, feedback neutri o negativi, lead poco qualificati. Se non ci sono criticità, scrivi \"\".\n5. Evidenzia punti positivi: lead qualificati, feedback positivi, follow-up efficaci. Se non ci sono, scrivi \"\".\n6. Suggerisci azioni operative: follow-up da fare, priorità da assegnare, miglioramenti. Se non ci sono suggerimenti, scrivi \"\".\n7. Usa i campi description, tags e custom_fields per generare sintesi e consigli.\n8. **Restituisci solo il JSON**, senza testo extra, commenti o spiegazioni.\n\nEsempio di output:\n\n{\n  \"data\": \"2025-10-29\",\n  \"numero_totale_ticket\": 5,\n  \"categorie_principali\": [\"intent__misc__feedback__positive\",\"language__it\",\"sentiment__neutral\"],\n  \"sintesi_generale\": \"I ticket riguardano principalmente lead qualificati e follow-up inviati con successo.\",\n  \"criticita_emerse\": \"Alcuni ticket hanno informazioni incomplete o sentiment neutro.\",\n  \"punti_positivi\": \"Lead con budget elevato e motivazione chiara, follow-up efficaci.\",\n  \"suggerimenti_operativi\": \"Contattare lead con budget elevato, inviare follow-up personalizzati, monitorare ticket incompleti.\"\n}\n\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -336,
+        256
+      ],
+      "id": "e277e35b-6de4-4cf2-8c1f-9a3c7eaa849d",
+      "name": "AI Agent4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        480
+      ],
+      "id": "69adbe82-45a3-44eb-896e-8a2c01bfd9c5",
+      "name": "Google Gemini Chat Model5",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6xAGhA9zHQNia7ZG",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"data\": {\n      \"type\": \"string\",\n      \"description\": \"Data del report (es. 2025-10-29)\"\n    },\n    \"numero_totale_ticket\": {\n      \"type\": \"number\",\n      \"description\": \"Numero totale dei ticket analizzati oggi\"\n    },\n    \"categorie_principali\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Elenco delle principali categorie di ticket riscontrate\"\n    },\n    \"sintesi_generale\": {\n      \"type\": \"string\",\n      \"description\": \"Riassunto generale dell’andamento giornaliero del supporto clienti\"\n    },\n    \"criticita_emerse\": {\n      \"type\": \"string\",\n      \"description\": \"Problemi o trend negativi emersi durante la giornata\"\n    },\n    \"punti_positivi\": {\n      \"type\": \"string\",\n      \"description\": \"Aspetti positivi, miglioramenti o feedback buoni\"\n    },\n    \"suggerimenti_operativi\": {\n      \"type\": \"string\",\n      \"description\": \"Raccomandazioni operative o note per il team di supporto\"\n    }\n  },\n  \"required\": [\n    \"data\",\n    \"numero_totale_ticket\",\n    \"sintesi_generale\"\n  ]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -192,
+        480
+      ],
+      "id": "8430b190-6f70-453d-9bc6-c8799e37bdb1",
+      "name": "Structured Output Parser4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prendiamo tutti i ticket dall'output di Zendesk\n// $items() restituisce tutti gli elementi dal nodo precedente\nconst tickets = $items().map(item => item.json);\n\n// Serializziamo i ticket in una stringa JSON leggibile\nreturn [\n  {\n    json: {\n      ticketsJSON: JSON.stringify(tickets, null, 2)\n    }\n  }\n];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        256
+      ],
+      "id": "469e6019-6e8e-4494-a237-9ee26a4bf7dd",
+      "name": "Serializza2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recupera l'output dell'AI Agent\nconst output = $json[\"output\"];\n\n// Se è un oggetto, lo convertiamo in stringa leggibile\nconst text = typeof output === \"object\"\n  ? JSON.stringify(output, null, 2)\n  : String(output || \"Nessun contenuto ricevuto\");\n\n// Crea un buffer per il contenuto del file\nconst buffer = Buffer.from(text, \"utf8\");\n\n// Restituiamo il file binario con mimeType di Google Docs\nreturn [\n  {\n    json: {},\n    binary: {\n      data: {\n        data: buffer.toString(\"base64\"),\n        mimeType: \"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",\nfileName: \"Report_giornaliero.docx\"\n\n      },\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        256
+      ],
+      "id": "d85d8bf7-4a42-4a91-b555-282477d6b68d",
+      "name": "Format Report1"
+    },
+    {
+      "parameters": {
+        "name": "=Report giornaliero - {{ $today.toFormat('yyyy-MM-dd') }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1Jj86mioOLkm_kqor249ioti6OXrLvuuN",
+          "mode": "list",
+          "cachedResultName": "Cartella Test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Jj86mioOLkm_kqor249ioti6OXrLvuuN"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        224,
+        256
+      ],
+      "id": "3a6d7ada-2d8c-4181-a3ae-adb452b3ec2a",
+      "name": "Upload file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qPMxPbXEkiB184Lw",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e7ae881-fcc6-43e5-b710-48ba0b2a976f",
+              "name": "todayStart",
+              "value": "={{ new Date(new Date().setHours(0,0,0,0)).toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "c9ff4741-be50-472d-b3ab-7e7501ea1a21",
+              "name": "todayEnd",
+              "value": "={{ new Date(new Date().setHours(23,59,59,999)).toISOString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -960,
+        256
+      ],
+      "id": "8b09bf5d-39a9-4635-afb0-706667091de2",
+      "name": "Set Start/End Day2"
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "1zRyvwo3lEeRJR3xqXUNFRYuYpbGQedfI",
+          "mode": "list"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "user",
+            "emailAddress": "ileniaunida@libero.it"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        432,
+        256
+      ],
+      "id": "3e5c5573-847d-438f-88f5-08c5cb50e85c",
+      "name": "Share file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "qPMxPbXEkiB184Lw",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Set Start/End Day2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many tickets2": {
+      "main": [
+        [
+          {
+            "node": "Serializza2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent4": {
+      "main": [
+        [
+          {
+            "node": "Format Report1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serializza2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Report1": {
+      "main": [
+        [
+          {
+            "node": "Upload file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file1": {
+      "main": [
+        [
+          {
+            "node": "Share file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Start/End Day2": {
+      "main": [
+        [
+          {
+            "node": "Get many tickets2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "24621b9b-d398-4367-97c1-ebb95d755e62",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3eade08974c65ea0e714de990b1c4d4deb3f525e0d19f574aa90538cacfd42e4"
+  },
+  "id": "965jlNBHid7fKd3Y",
+  "tags": []
+}
